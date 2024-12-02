@@ -41,7 +41,20 @@ docker exec -i postgres psql -U postgres_user -d my_db -f /data/create_schema.sq
 docker exec -i postgres psql -U postgres_user -d my_db -f /data/insert_data.sql
 ```
 
-3. **Create additional tables for ETL processing**:
+3. **Incremental data load, create transaction table and meta table**:
+```
+docker exec -i postgres psql -U postgres_user -d my_db -f /scripts/incremental/create_transaction_table.sql
+```
+```
+docker exec -i postgres psql -U postgres_user -d my_db -f /scripts/incremental/create_meta_table.sql
+```
+
+4. **Insert data from 'ref/sales/*.csv' into the transaction table**:
+```
+docker exec -it python_container python /scripts/incremental/incremental_data_load.py
+```
+
+5. **Create additional tables for ETL processing**:
 - user_transaction_amount:
 ```
 docker exec -i postgres psql -U postgres_user -d my_db -f /scripts/complex/create_user_transaction_amount_table.sql
