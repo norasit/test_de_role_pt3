@@ -1,0 +1,19 @@
+FROM python:3.9-slim
+
+# ติดตั้ง dependencies ที่จำเป็นสำหรับการสร้าง psycopg2
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc && \
+    apt-get clean
+
+# ตั้งค่าโฟลเดอร์สำหรับโค้ด
+WORKDIR /scripts
+
+# คัดลอก requirements.txt
+COPY requirements.txt /tmp/requirements.txt
+
+# ติดตั้ง Python dependencies
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+
+# รันคำสั่งเริ่มต้นเป็น tail เพื่อให้ container ทำงานตลอดเวลา
+CMD ["tail", "-f", "/dev/null"]

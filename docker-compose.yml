@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  # PostgreSQL service
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres_user          # ชื่อผู้ใช้
+      POSTGRES_PASSWORD: postgres_password  # รหัสผ่าน
+      POSTGRES_DB: my_db                    # ชื่อฐานข้อมูล
+    ports:
+      - "5432:5432"  # Map พอร์ตของ PostgreSQL
+    volumes:
+      - ./ref:/data                          # Mount ไฟล์ .csv
+      - ./incremental_data_load_test:/scripts/incremental  # Mount ไฟล์ .sql, .py
+      - ./complex_data_transformation_test:/scripts/complex # Mount ไฟล์ .sql, .py
+      - postgres_data:/var/lib/postgresql/data  # เก็บข้อมูล PostgreSQL ถาวร
+
+  # pgAdmin service
+  pgadmin:
+    image: dpage/pgadmin4  # ใช้ image pgAdmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com  # email login pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: admin1234       # password login pgAdmin
+    ports:
+      - "5050:80"  # Map พอร์ต 5050 (host) กับพอร์ต 80 (pgAdmin container)
+    depends_on:
+      - postgres
+
+  # Python service
+  python:
+    build:
+      context: .  # ระบุให้ใช้ Dockerfile.python
+      dockerfile: Dockerfile.python
+    container_name: python_container
+    volumes:
+      - ./ref:/data  # Mount โฟลเดอร์ ref เข้าไปที่ /data                                 
+      - ./incremental_data_load_test:/scripts/incremental  # Mount โฟลเดอร์ incremental_data_load_test
+      - ./complex_data_transformation_test:/scripts/complex # Mount โฟลเดอร์ complex_data_transformation_test
+    working_dir: /scripts/incremental
+    command: ["tail", "-f", "/dev/null"]  # ทำให้ container ทำงานรอตลอดเวลา
+
+volumes:
+  postgres_data:
